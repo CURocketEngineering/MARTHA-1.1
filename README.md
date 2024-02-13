@@ -1,2 +1,1 @@
-# MARTHA
- 
+![Martha Logo](assets/MarthaLogo.jpg)
