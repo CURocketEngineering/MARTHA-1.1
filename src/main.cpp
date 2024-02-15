@@ -2,191 +2,105 @@
 #include <Adafruit_MPL3115A2.h>
 #include <Adafruit_LSM6DSOX.h>
 
+#define DEBUG Serial
+
 Adafruit_MPL3115A2 baro;
 Adafruit_LSM6DSOX sox;
 
+int last_led_toggle = 0;
+
 void setup(void) {
+  pinMode(PA9, OUTPUT);
+
   Serial.begin(115200);
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
-  Serial.println("Adafruit LSM6DSOX & MPL test!");
-
   TwoWire *wire = new TwoWire(PB11, PB10);
+
+  Serial.println("Setting up barometer...");
 
   if (!baro.begin(wire)) {
     Serial.println("Could not find sensor. Check wiring.");
     while(1);
   }
 
+  // Setting the barometer to altimeter
+  baro.setMode(MPL3115A2_ALTIMETER);
+  Serial.println("Setting up accelerometer and gyroscope...");
   if (!sox.begin_I2C(0x6A, wire)) {
-    // if (!sox.begin_SPI(LSM_CS)) {
-    // if (!sox.begin_SPI(LSM_CS, LSM_SCK, LSM_MISO, LSM_MOSI)) {
-    // Serial.println("Failed to find LSM6DSOX chip");
     while (1) {
       delay(10);
     }
   }
 
-  Serial.println("LSM6DSOX Found!");
+  Serial.println("Setting ACL and Gyro ranges and data rates...");
+  sox.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
+  sox.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS );
 
-  // sox.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
-  Serial.print("Accelerometer range set to: ");
-  switch (sox.getAccelRange()) {
-  case LSM6DS_ACCEL_RANGE_2_G:
-    Serial.println("+-2G");
-    break;
-  case LSM6DS_ACCEL_RANGE_4_G:
-    Serial.println("+-4G");
-    break;
-  case LSM6DS_ACCEL_RANGE_8_G:
-    Serial.println("+-8G");
-    break;
-  case LSM6DS_ACCEL_RANGE_16_G:
-    Serial.println("+-16G");
-    break;
+  sox.setAccelDataRate(LSM6DS_RATE_104_HZ);
+  sox.setGyroDataRate(LSM6DS_RATE_104_HZ);
+
+  // If the range is not set correctly, then print a message
+  if (sox.getAccelRange() != LSM6DS_ACCEL_RANGE_16_G) {
+    Serial.println("Failed to set ACL range");
   }
-
-  // sox.setGyroRange(LSM6DS_GYRO_RANGE_250_DPS );
-  Serial.print("Gyro range set to: ");
-  switch (sox.getGyroRange()) {
-  case LSM6DS_GYRO_RANGE_125_DPS:
-    Serial.println("125 degrees/s");
-    break;
-  case LSM6DS_GYRO_RANGE_250_DPS:
-    Serial.println("250 degrees/s");
-    break;
-  case LSM6DS_GYRO_RANGE_500_DPS:
-    Serial.println("500 degrees/s");
-    break;
-  case LSM6DS_GYRO_RANGE_1000_DPS:
-    Serial.println("1000 degrees/s");
-    break;
-  case LSM6DS_GYRO_RANGE_2000_DPS:
-    Serial.println("2000 degrees/s");
-    break;
-  case ISM330DHCX_GYRO_RANGE_4000_DPS:
-    break; // unsupported range for the DSOX
+  if (sox.getGyroRange() != LSM6DS_GYRO_RANGE_2000_DPS) {
+    Serial.println("Failed to set Gyro range");
   }
-
-  // sox.setAccelDataRate(LSM6DS_RATE_12_5_HZ);
-  Serial.print("Accelerometer data rate set to: ");
-  switch (sox.getAccelDataRate()) {
-  case LSM6DS_RATE_SHUTDOWN:
-    Serial.println("0 Hz");
-    break;
-  case LSM6DS_RATE_12_5_HZ:
-    Serial.println("12.5 Hz");
-    break;
-  case LSM6DS_RATE_26_HZ:
-    Serial.println("26 Hz");
-    break;
-  case LSM6DS_RATE_52_HZ:
-    Serial.println("52 Hz");
-    break;
-  case LSM6DS_RATE_104_HZ:
-    Serial.println("104 Hz");
-    break;
-  case LSM6DS_RATE_208_HZ:
-    Serial.println("208 Hz");
-    break;
-  case LSM6DS_RATE_416_HZ:
-    Serial.println("416 Hz");
-    break;
-  case LSM6DS_RATE_833_HZ:
-    Serial.println("833 Hz");
-    break;
-  case LSM6DS_RATE_1_66K_HZ:
-    Serial.println("1.66 KHz");
-    break;
-  case LSM6DS_RATE_3_33K_HZ:
-    Serial.println("3.33 KHz");
-    break;
-  case LSM6DS_RATE_6_66K_HZ:
-    Serial.println("6.66 KHz");
-    break;
+  if (sox.getAccelDataRate() != LSM6DS_RATE_104_HZ) {
+    Serial.println("Failed to set ACL data rate");
   }
-
-  // sox.setGyroDataRate(LSM6DS_RATE_12_5_HZ);
-  Serial.print("Gyro data rate set to: ");
-  switch (sox.getGyroDataRate()) {
-  case LSM6DS_RATE_SHUTDOWN:
-    Serial.println("0 Hz");
-    break;
-  case LSM6DS_RATE_12_5_HZ:
-    Serial.println("12.5 Hz");
-    break;
-  case LSM6DS_RATE_26_HZ:
-    Serial.println("26 Hz");
-    break;
-  case LSM6DS_RATE_52_HZ:
-    Serial.println("52 Hz");
-    break;
-  case LSM6DS_RATE_104_HZ:
-    Serial.println("104 Hz");
-    break;
-  case LSM6DS_RATE_208_HZ:
-    Serial.println("208 Hz");
-    break;
-  case LSM6DS_RATE_416_HZ:
-    Serial.println("416 Hz");
-    break;
-  case LSM6DS_RATE_833_HZ:
-    Serial.println("833 Hz");
-    break;
-  case LSM6DS_RATE_1_66K_HZ:
-    Serial.println("1.66 KHz");
-    break;
-  case LSM6DS_RATE_3_33K_HZ:
-    Serial.println("3.33 KHz");
-    break;
-  case LSM6DS_RATE_6_66K_HZ:
-    Serial.println("6.66 KHz");
-    break;
+  if (sox.getGyroDataRate() != LSM6DS_RATE_104_HZ) {
+    Serial.println("Failed to set Gyro data rate");
   }
 }
 
 void loop() {
+  if (millis() - last_led_toggle > 1000) {
+    last_led_toggle = millis();
+    digitalWrite(PA9, !digitalRead(PA9));
+  }
+  
 
-  //  /* Get a new normalized sensor event */
+
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
   sox.getEvent(&accel, &gyro, &temp);
 
-  Serial.print("\t\tTemperature ");
-  Serial.print(temp.temperature);
-  Serial.println(" deg C");
+  // Serial.print("\t\tTemperature ");
+  // Serial.print(temp.temperature);
+  // Serial.println(" deg C");
 
   /* Display the results (acceleration is measured in m/s^2) */
-  Serial.print("\t\tAccel X: ");
-  Serial.print(accel.acceleration.x);
-  Serial.print(" \tY: ");
-  Serial.print(accel.acceleration.y);
-  Serial.print(" \tZ: ");
-  Serial.print(accel.acceleration.z);
-  Serial.println(" m/s^2 ");
+  // Serial.print("\t\tAccel X: ");
+  // Serial.print(accel.acceleration.x);
+  // Serial.print(" \tY: ");
+  // Serial.print(accel.acceleration.y);
+  // Serial.print(" \tZ: ");
+  // Serial.print(accel.acceleration.z);
+  // Serial.println(" m/s^2 ");
 
   /* Display the results (rotation is measured in rad/s) */
-  Serial.print("\t\tGyro X: ");
-  Serial.print(gyro.gyro.x);
-  Serial.print(" \tY: ");
-  Serial.print(gyro.gyro.y);
-  Serial.print(" \tZ: ");
-  Serial.print(gyro.gyro.z);
-  Serial.println(" radians/s ");
-  Serial.println();
+  // Serial.print("\t\tGyro X: ");
+  // Serial.print(gyro.gyro.x);
+  // Serial.print(" \tY: ");
+  // Serial.print(gyro.gyro.y);
+  // Serial.print(" \tZ: ");
+  // Serial.print(gyro.gyro.z);
+  // Serial.println(" radians/s ");
+  // Serial.println();
 
   // Baro stuff
   float pressure = baro.getPressure();
   float altitude = baro.getAltitude();
   float temperature = baro.getTemperature();
 
-  Serial.println("-----------------");
-  Serial.print("pressure = "); Serial.print(pressure); Serial.println(" hPa");
-  Serial.print("altitude = "); Serial.print(altitude); Serial.println(" m");
-  Serial.print("temperature = "); Serial.print(temperature); Serial.println(" C");
+  // Serial.println("-----------------");
+  // Serial.print("pressure = "); Serial.print(pressure); Serial.println(" hPa");
+  // Serial.print("altitude = "); Serial.print(altitude); Serial.println(" m");
+  // Serial.print("temperature = "); Serial.print(temperature); Serial.println(" C");
 
-
-  delay(100);
+  Serial.println(millis());
 }
