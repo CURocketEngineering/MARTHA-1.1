@@ -2,10 +2,31 @@
 #include <Adafruit_MPL3115A2.h>
 #include <Adafruit_LSM6DSOX.h>
 
+#include "CRE_DataHandler.h"
+
 #define DEBUG Serial
 
 Adafruit_MPL3115A2 baro;
 Adafruit_LSM6DSOX sox;
+
+// ----------------
+// Initalization of data handlers
+// ----------------
+// First parameter is the interval between each data point in milliseconds
+// Second parameter is the size of the temporal array in milliseconds (i.e. hold old data is the oldest data point)
+SensorData altitudeData(62.5, 5000); // 62.5ms is the interval between each data point
+
+SensorData xAccelData(62.5, 1000);
+SensorData yAccelData(62.5, 1000);
+SensorData zAccelData(62.5, 1000);
+
+SensorData xGyroData(62.5, 1000);
+SensorData yGyroData(62.5, 1000);
+SensorData zGyroData(62.5, 1000);
+
+// Storing these at a slower rate b/c less important
+SensorData temperatureData(500, 1000); 
+SensorData pressureData(500, 1000); 
 
 int last_led_toggle = 0;
 
@@ -57,7 +78,8 @@ void setup(void) {
 }
 
 void loop() {
-  if (millis() - last_led_toggle > 1000) {
+  uint32_t current_time = millis();
+  if (current_time - last_led_toggle > 1000) {
     last_led_toggle = millis();
     digitalWrite(PA9, !digitalRead(PA9));
   }
@@ -69,38 +91,17 @@ void loop() {
   sensors_event_t temp;
   sox.getEvent(&accel, &gyro, &temp);
 
-  // Serial.print("\t\tTemperature ");
-  // Serial.print(temp.temperature);
-  // Serial.println(" deg C");
+  // Storing data in the data handlers
+  altitudeData.addData(DataPoint(current_time, baro.getAltitude()));
 
-  /* Display the results (acceleration is measured in m/s^2) */
-  // Serial.print("\t\tAccel X: ");
-  // Serial.print(accel.acceleration.x);
-  // Serial.print(" \tY: ");
-  // Serial.print(accel.acceleration.y);
-  // Serial.print(" \tZ: ");
-  // Serial.print(accel.acceleration.z);
-  // Serial.println(" m/s^2 ");
+  xAccelData.addData(DataPoint(current_time, accel.acceleration.x));
+  yAccelData.addData(DataPoint(current_time, accel.acceleration.y));
+  zAccelData.addData(DataPoint(current_time, accel.acceleration.z));
 
-  /* Display the results (rotation is measured in rad/s) */
-  // Serial.print("\t\tGyro X: ");
-  // Serial.print(gyro.gyro.x);
-  // Serial.print(" \tY: ");
-  // Serial.print(gyro.gyro.y);
-  // Serial.print(" \tZ: ");
-  // Serial.print(gyro.gyro.z);
-  // Serial.println(" radians/s ");
-  // Serial.println();
+  xGyroData.addData(DataPoint(current_time, gyro.gyro.x));
+  yGyroData.addData(DataPoint(current_time, gyro.gyro.y));
+  zGyroData.addData(DataPoint(current_time, gyro.gyro.z));
 
-  // Baro stuff
-  float pressure = baro.getPressure();
-  float altitude = baro.getAltitude();
-  float temperature = baro.getTemperature();
-
-  // Serial.println("-----------------");
-  // Serial.print("pressure = "); Serial.print(pressure); Serial.println(" hPa");
-  // Serial.print("altitude = "); Serial.print(altitude); Serial.println(" m");
-  // Serial.print("temperature = "); Serial.print(temperature); Serial.println(" C");
-
-  Serial.println(millis());
+  temperatureData.addData(DataPoint(current_time, temp.temperature));
+  pressureData.addData(DataPoint(current_time, baro.getPressure()));
 }
