@@ -9,7 +9,7 @@
 #include <vector>
 
 #define MAX_DATA_POINTS_READ_ARRAY 128
-#define MAX_DATA_POINTS_TEMPORAL_ARRAY 256
+#define MAX_DATA_POINTS_TEMPORAL_ARRAY 255
 
 // Holds a single data point
 // Contains a timestamp in milliseconds and a float data point
@@ -32,9 +32,8 @@ public:
 class ReadCircularArray {
 public:
     std::vector<DataPoint> data;
-    uint8_t head;
-    uint8_t tail;
-    uint8_t size;
+    uint8_t head; // Head is the index of the latest data point
+    uint8_t maxSize;  // The maximum number of data points that can be stored
 
     ReadCircularArray();
     DataPoint getLatestData();
@@ -46,8 +45,8 @@ class TemporalCircularArray {
 public:
     std::vector<DataPoint> data;
     uint8_t head;
-    uint8_t tail;
-    uint8_t size; // Will equal size_ms / interval_ms
+    uint8_t maxSize; // The maximum number of data points that can be stored
+                     // Will equal size_ms / interval_ms
     uint16_t interval_ms;  // The interval between each data point
 
     TemporalCircularArray(uint16_t interval_ms, uint16_t size_ms);
@@ -80,5 +79,14 @@ private:
     ReadCircularArray readArray;
     TemporalCircularArray temporalArray;
 };
+
+
+// Testing scripts
+void test_DataPoint();
+void test_ReadCircularArray();
+void test_TemporalCircularArray();
+void test_SensorData();
+
+void test_DataHandler();
 
 #endif // DATAHANDLER_H

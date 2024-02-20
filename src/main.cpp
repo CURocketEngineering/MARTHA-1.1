@@ -31,11 +31,15 @@ SensorData pressureData(500, 1000);
 int last_led_toggle = 0;
 
 void setup(void) {
+  
   pinMode(PA9, OUTPUT);
 
   Serial.begin(115200);
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
+
+  // Run this to test the data handler, will stop the program after it finishes
+  // test_DataHandler();
 
   TwoWire *wire = new TwoWire(PB11, PB10);
 
