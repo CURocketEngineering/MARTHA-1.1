@@ -2,7 +2,7 @@
 #include <Adafruit_MPL3115A2.h>
 #include <Adafruit_LSM6DSOX.h>
 
-#include "CRE_DataHandler.h"
+#include "SensorDataHandler.h"
 
 #define DEBUG Serial
 
