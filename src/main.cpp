@@ -3,6 +3,7 @@
 #include <Adafruit_LSM6DSOX.h>
 
 #include "SensorDataHandler.h"
+#include <SD.h>
 
 #define DEBUG Serial
 
@@ -14,19 +15,20 @@ Adafruit_LSM6DSOX sox;
 // ----------------
 // First parameter is the interval between each data point in milliseconds
 // Second parameter is the size of the temporal array in milliseconds (i.e. hold old data is the oldest data point)
-SensorData altitudeData(62.5, 5000); // 62.5ms is the interval between each data point
+// Third parameter is the name of the data
+SensorData altitudeData(62.5, 5000, "alt"); // 62.5ms is the interval between each data point
 
-SensorData xAccelData(62.5, 1000);
-SensorData yAccelData(62.5, 1000);
-SensorData zAccelData(62.5, 1000);
+SensorData xAccelData(62.5, 1000, "xacl");
+SensorData yAccelData(62.5, 1000, "yacl");
+SensorData zAccelData(62.5, 1000, "zacl");
 
-SensorData xGyroData(62.5, 1000);
-SensorData yGyroData(62.5, 1000);
-SensorData zGyroData(62.5, 1000);
+SensorData xGyroData(62.5, 1000, "xgyro");
+SensorData yGyroData(62.5, 1000, "ygyro");
+SensorData zGyroData(62.5, 1000, "zgyro");
 
 // Storing these at a slower rate b/c less important
-SensorData temperatureData(500, 1000); 
-SensorData pressureData(500, 1000); 
+SensorData temperatureData(500, 1000, "temp"); 
+SensorData pressureData(500, 1000, "pressure"); 
 
 int last_led_toggle = 0;
 
@@ -37,6 +39,19 @@ void setup(void) {
   Serial.begin(115200);
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
+
+  // PA 4, 5, 6, and 7 are used for the SD card
+  // 7 is the MOSI pin
+  // 6 is the MISO pin
+  // 5 is the SCK pin
+  // 4 is the CS pin
+  if (!SD.begin(4)) {
+    Serial.println("Card failed, or not present");
+    // don't do anything more:
+    return;
+  } else {
+    Serial.println("SD card initialized");
+  }
 
   // Run this to test the data handler, will stop the program after it finishes
   // test_DataHandler();
@@ -108,4 +123,9 @@ void loop() {
 
   temperatureData.addData(DataPoint(current_time, temp.temperature));
   pressureData.addData(DataPoint(current_time, baro.getPressure()));
+
+
+  SensorData * viewerPtr = &temperatureData;
+  // Print out altitude data
+  Serial.println((*viewerPtr).getLatestData().data);
 }
