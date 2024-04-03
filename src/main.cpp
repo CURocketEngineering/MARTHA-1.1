@@ -30,6 +30,9 @@ SensorData zGyroData(62.5, 1000, "zgyro");
 SensorData temperatureData(500, 1000, "temp"); 
 SensorData pressureData(500, 1000, "pressure"); 
 
+// For the serial SD card logger
+HardwareSerial SD_serial(PB7, PB6); // RX, TX
+
 int last_led_toggle = 0;
 
 void setup(void) {
@@ -40,18 +43,18 @@ void setup(void) {
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
-  // PA 4, 5, 6, and 7 are used for the SD card
-  // 7 is the MOSI pin
-  // 6 is the MISO pin
-  // 5 is the SCK pin
-  // 4 is the CS pin
-  if (!SD.begin(4)) {
-    Serial.println("Card failed, or not present");
-    // don't do anything more:
-    return;
-  } else {
-    Serial.println("SD card initialized");
-  }
+  
+  SD_serial.begin(9600);
+  while (!SD_serial)
+    delay(10);
+
+  Serial.println("All serial communication is setup");
+  SD_serial.println("Hello sd card!");
+
+  // Start the SPI SD card
+  SD.begin(PA4);
+
+
 
   // Run this to test the data handler, will stop the program after it finishes
   // test_DataHandler();
@@ -111,18 +114,18 @@ void loop() {
   sox.getEvent(&accel, &gyro, &temp);
 
   // Storing data in the data handlers
-  altitudeData.addData(DataPoint(current_time, baro.getAltitude()));
+  altitudeData.addData(DataPoint(current_time, baro.getAltitude()), SD_serial);
 
-  xAccelData.addData(DataPoint(current_time, accel.acceleration.x));
-  yAccelData.addData(DataPoint(current_time, accel.acceleration.y));
-  zAccelData.addData(DataPoint(current_time, accel.acceleration.z));
+  xAccelData.addData(DataPoint(current_time, accel.acceleration.x), SD_serial);
+  yAccelData.addData(DataPoint(current_time, accel.acceleration.y), SD_serial);
+  zAccelData.addData(DataPoint(current_time, accel.acceleration.z), SD_serial);
 
-  xGyroData.addData(DataPoint(current_time, gyro.gyro.x));
-  yGyroData.addData(DataPoint(current_time, gyro.gyro.y));
-  zGyroData.addData(DataPoint(current_time, gyro.gyro.z));
+  xGyroData.addData(DataPoint(current_time, gyro.gyro.x), SD_serial);
+  yGyroData.addData(DataPoint(current_time, gyro.gyro.y), SD_serial);
+  zGyroData.addData(DataPoint(current_time, gyro.gyro.z), SD_serial);
 
-  temperatureData.addData(DataPoint(current_time, temp.temperature));
-  pressureData.addData(DataPoint(current_time, baro.getPressure()));
+  temperatureData.addData(DataPoint(current_time, temp.temperature), SD_serial);
+  pressureData.addData(DataPoint(current_time, baro.getPressure()), SD_serial);
 
 
   SensorData * viewerPtr = &temperatureData;
