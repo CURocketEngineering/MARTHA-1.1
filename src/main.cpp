@@ -16,19 +16,19 @@ Adafruit_LSM6DSOX sox;
 // First parameter is the interval between each data point in milliseconds
 // Second parameter is the size of the temporal array in milliseconds (i.e. hold old data is the oldest data point)
 // Third parameter is the name of the data
-SensorData altitudeData(62.5, 5000, "alt"); // 62.5ms is the interval between each data point
+SensorData altitudeData(62.5, 5000, "at"); // 62.5ms is the interval between each data point
 
-SensorData xAccelData(62.5, 1000, "xacl");
-SensorData yAccelData(62.5, 1000, "yacl");
-SensorData zAccelData(62.5, 1000, "zacl");
+SensorData xAccelData(62.5, 3000, "xa");
+SensorData yAccelData(62.5, 3000, "ya");
+SensorData zAccelData(200, 7000, "za");
 
-SensorData xGyroData(62.5, 1000, "xgyro");
-SensorData yGyroData(62.5, 1000, "ygyro");
-SensorData zGyroData(62.5, 1000, "zgyro");
+SensorData xGyroData(62.5, 1000, "xg");
+SensorData yGyroData(62.5, 1000, "yg");
+SensorData zGyroData(62.5, 1000, "zg");
 
 // Storing these at a slower rate b/c less important
-SensorData temperatureData(500, 1000, "temp"); 
-SensorData pressureData(500, 1000, "pressure"); 
+SensorData temperatureData(500, 1000, "tp"); 
+SensorData pressureData(500, 1000, "ps"); 
 
 // For the serial SD card logger
 HardwareSerial SD_serial(PB7, PB6); // RX, TX
@@ -49,7 +49,6 @@ void setup(void) {
     delay(10);
 
   Serial.println("All serial communication is setup");
-  SD_serial.println("Hello sd card!");
 
   // Start the SPI SD card
   SD.begin(PA4);
