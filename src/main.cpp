@@ -16,19 +16,19 @@ Adafruit_LSM6DSOX sox;
 // First parameter is the interval between each data point in milliseconds
 // Second parameter is the size of the temporal array in milliseconds (i.e. hold old data is the oldest data point)
 // Third parameter is the name of the data
-SensorData altitudeData(62.5, 5000, "at"); // 62.5ms is the interval between each data point
+SensorData altitudeData(62.5, 5000, "alt"); // 62.5ms is the interval between each data point
 
-SensorData xAccelData(62.5, 3000, "xa");
-SensorData yAccelData(62.5, 3000, "ya");
-SensorData zAccelData(200, 7000, "za");
+SensorData xAccelData(62.5, 3000, "xac");
+SensorData yAccelData(62.5, 3000, "yac");
+SensorData zAccelData(200, 7000, "zac");
 
-SensorData xGyroData(62.5, 1000, "xg");
-SensorData yGyroData(62.5, 1000, "yg");
-SensorData zGyroData(62.5, 1000, "zg");
+SensorData xGyroData(62.5, 1000, "xgy");
+SensorData yGyroData(62.5, 1000, "ygy");
+SensorData zGyroData(62.5, 1000, "zgy");
 
 // Storing these at a slower rate b/c less important
-SensorData temperatureData(500, 1000, "tp"); 
-SensorData pressureData(500, 1000, "ps"); 
+SensorData temperatureData(500, 1000, "tmp"); 
+SensorData pressureData(500, 1000, "prs"); 
 
 // For the serial SD card logger
 HardwareSerial SD_serial(PB7, PB6); // RX, TX
