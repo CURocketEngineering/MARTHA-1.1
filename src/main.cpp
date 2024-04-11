@@ -125,9 +125,4 @@ void loop() {
 
   temperatureData.addData(DataPoint(current_time, temp.temperature), SD_serial);
   pressureData.addData(DataPoint(current_time, baro.getPressure()), SD_serial);
-
-
-  SensorData * viewerPtr = &temperatureData;
-  // Print out altitude data
-  Serial.println((*viewerPtr).getLatestData().data);
 }
