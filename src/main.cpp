@@ -45,9 +45,9 @@ void setup(void) {
   pinMode(PA9, OUTPUT);
   
   // Uncomment this to see the debug messages
-  Serial.begin(115200);
-  while (!Serial)
-    delay(10); // will pause Zero, Leonardo, etc until serial console opens
+  // Serial.begin(115200);
+  // while (!Serial)
+  //   delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
   
   flightStatus.setupSDHs();
