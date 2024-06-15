@@ -2,6 +2,7 @@
 #include <Adafruit_MPL3115A2.h>
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_LIS3MDL.h>
+#include "Adafruit_PM25AQI.h" // Payload only
 
 #include "SensorDataHandler.h"
 #include "flightstatus.h"
@@ -12,6 +13,7 @@
 Adafruit_MPL3115A2 baro;
 Adafruit_LSM6DSOX sox;
 Adafruit_LIS3MDL mag;
+Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
 
 // ----------------
 // Initalization of data handlers
@@ -30,6 +32,15 @@ SensorData zGyroData(500, 1000, "zgy");
 
 // Storing these at a slower rate b/c less important
 SensorData temperatureData(500, 1000, "tmp"); 
+
+// Air quality data
+// q = quality, 03 = 0.3um, 05 = 0.5um, 10 = 1.0um, 25 = 2.5um, 50 = 5um, 1h = 10um
+SensorData airQuality3umData(500, 1000, "q03");
+SensorData airQuality5umData(500, 1000, "q05");
+SensorData airQuality10umData(500, 1000, "q10");
+SensorData airQuality25umData(500, 1000, "q25");
+SensorData airQuality50umData(500, 1000, "q50");
+SensorData airQuality100umData(500, 1000, "q1h");
 
 FlightStatus flightStatus(&xAccelData, &yAccelData, &zAccelData);
 
@@ -130,6 +141,18 @@ void setup(void) {
   //   Serial.println("Failed to set Mag data rate");
   // }
   // test_DataHandler();
+
+  // Setup for the air quality sensor
+  Serial.println("Setting up air quality sensor...");
+  delay(1000);
+  // There are 3 options for connectivity!
+  if (! aqi.begin_I2C()) {      // connect to the sensor over I2C
+    Serial.println("Could not find PM 2.5 sensor!");
+    while (1) delay(10);
+  }
+
+  Serial.println("PM25 found!");
+
   Serial.println("Setup Complete!!!");
 }
 
@@ -158,6 +181,17 @@ void loop() {
   zGyroData.addData(DataPoint(current_time, gyro.gyro.z), &SD_serial);
 
   temperatureData.addData(DataPoint(current_time, temp.temperature), &SD_serial);
+
+  // Get the air quality data
+  PM25_AQI_Data aqi_data;
+  if (aqi.read(&aqi_data)) {
+    airQuality3umData.addData(DataPoint(current_time, aqi_data.particles_03um), &SD_serial);
+    airQuality5umData.addData(DataPoint(current_time, aqi_data.particles_05um), &SD_serial);
+    airQuality10umData.addData(DataPoint(current_time, aqi_data.particles_10um), &SD_serial);
+    airQuality25umData.addData(DataPoint(current_time, aqi_data.particles_25um), &SD_serial);
+    airQuality50umData.addData(DataPoint(current_time, aqi_data.particles_50um), &SD_serial);
+    airQuality100umData.addData(DataPoint(current_time, aqi_data.particles_100um), &SD_serial);
+  }
 
   flightStatus.update(&SD_serial);
 }
