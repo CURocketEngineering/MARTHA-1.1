@@ -35,12 +35,12 @@ SensorData temperatureData(500, 1000, "tmp");
 
 // Air quality data
 // q = quality, 03 = 0.3um, 05 = 0.5um, 10 = 1.0um, 25 = 2.5um, 50 = 5um, 1h = 10um
-SensorData airQuality3umData(500, 1000, "q03");
-SensorData airQuality5umData(500, 1000, "q05");
-SensorData airQuality10umData(500, 1000, "q10");
-SensorData airQuality25umData(500, 1000, "q25");
-SensorData airQuality50umData(500, 1000, "q50");
-SensorData airQuality100umData(500, 1000, "q1h");
+SensorData airQuality3umData(500, 500, "q03");
+SensorData airQuality5umData(500, 500, "q05");
+SensorData airQuality10umData(500, 500, "q10");
+SensorData airQuality25umData(500, 500, "q25");
+SensorData airQuality50umData(500, 500, "q50");
+SensorData airQuality100umData(500, 500, "q1h");
 
 FlightStatus flightStatus(&xAccelData, &yAccelData, &zAccelData);
 
@@ -56,9 +56,9 @@ void setup(void) {
   pinMode(PA9, OUTPUT);
   
   // Uncomment this to see the debug messages
-  // Serial.begin(115200);
-  // while (!Serial)
-  //   delay(10); // will pause Zero, Leonardo, etc until serial console opens
+  Serial.begin(115200);
+  while (!Serial)
+    delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
   
   flightStatus.setupSDHs();
@@ -142,13 +142,15 @@ void setup(void) {
   // }
   // test_DataHandler();
 
+  TwoWire *BOwire = new TwoWire(PB9, PB8); // Breakout board i2c 
+
   // Setup for the air quality sensor
   Serial.println("Setting up air quality sensor...");
   delay(1000);
   // There are 3 options for connectivity!
-  if (! aqi.begin_I2C()) {      // connect to the sensor over I2C
+  while (! aqi.begin_I2C(BOwire)) {      // connect to the sensor over I2C
     Serial.println("Could not find PM 2.5 sensor!");
-    while (1) delay(10);
+    delay(1000);
   }
 
   Serial.println("PM25 found!");
@@ -192,6 +194,13 @@ void loop() {
     airQuality50umData.addData(DataPoint(current_time, aqi_data.particles_50um), &SD_serial);
     airQuality100umData.addData(DataPoint(current_time, aqi_data.particles_100um), &SD_serial);
   }
+  Serial.println("datas");
+  Serial.println(aqi_data.particles_03um);
+  Serial.println(aqi_data.particles_05um);
+  Serial.println(aqi_data.particles_10um);
+  Serial.println(aqi_data.particles_25um);
+  Serial.println(aqi_data.particles_50um);
+  Serial.println(aqi_data.particles_100um);
 
   flightStatus.update(&SD_serial);
 }
