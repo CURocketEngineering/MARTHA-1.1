@@ -56,9 +56,9 @@ void setup(void) {
   pinMode(PA9, OUTPUT);
   
   // Uncomment this to see the debug messages
-  Serial.begin(115200);
-  while (!Serial)
-    delay(10); // will pause Zero, Leonardo, etc until serial console opens
+  // Serial.begin(115200);
+  // while (!Serial)
+  //   delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
   
   flightStatus.setupSDHs();
@@ -194,13 +194,6 @@ void loop() {
     airQuality50umData.addData(DataPoint(current_time, aqi_data.particles_50um), &SD_serial);
     airQuality100umData.addData(DataPoint(current_time, aqi_data.particles_100um), &SD_serial);
   }
-  Serial.println("datas");
-  Serial.println(aqi_data.particles_03um);
-  Serial.println(aqi_data.particles_05um);
-  Serial.println(aqi_data.particles_10um);
-  Serial.println(aqi_data.particles_25um);
-  Serial.println(aqi_data.particles_50um);
-  Serial.println(aqi_data.particles_100um);
 
   flightStatus.update(&SD_serial);
 }
