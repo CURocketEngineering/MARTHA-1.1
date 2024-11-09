@@ -5,9 +5,12 @@
 #include <Adafruit_LIS3MDL.h>
 #include <SD.h>
 
+#define DEBUG
+
 #include "data_handling/SensorDataHandler.h"
 #include "data_handling/DataSaverSDSerial.h"
 #include "data_handling/DataNames.h"
+#include "data_handling/LaunchPredictor.h"
 
 #define DEBUG Serial
 
@@ -31,7 +34,15 @@ SensorDataHandler zGyroData(GYROSCOPE_Z, &dataSaverSDSerial);
 // Storing these at a slower rate b/c less important
 SensorDataHandler temperatureData(TEMPERATURE, &dataSaverSDSerial);
 
+SensorDataHandler medianAccelSquared(MEDIAN_ACCELERATION_SQUARED, &dataSaverSDSerial);
+SensorDataHandler cycleRate(AVERAGE_CYCLE_RATE, &dataSaverSDSerial);
+
+LaunchPredictor launchPredictor(30, 1000, 50);
+
+float cycle_count = 0;
+
 int last_led_toggle = 0;
+int toggle_delay = 500;
 
 void setup(void) {
   
@@ -70,6 +81,7 @@ void setup(void) {
   baro.setSeaPressure(240); // Adjust this to your local forecast!
 
   temperatureData.restrictSaveSpeed(1000); // Save temperature data every second
+  cycleRate.restrictSaveSpeed(1000); // Save cycle rate every second
 
   // Setting the barometer to altimeter
   // baro.setMode(MPL3115A2_ALTIMETER);
@@ -126,7 +138,8 @@ void setup(void) {
 }
 
 void loop() {
-  int toggle_delay = 500;
+  cycle_count++;
+
   // if (flightStatus.getStage() > ARMED) {
   //   toggle_delay = 50;
   // }
@@ -135,6 +148,9 @@ void loop() {
     last_led_toggle = millis();
     digitalWrite(PA9, !digitalRead(PA9));
   }
+
+  int average_cycle_rate_hz = cycle_count / (current_time / 1000);
+  cycleRate.addData(DataPoint(current_time, average_cycle_rate_hz));
 
   sensors_event_t accel;
   sensors_event_t gyro;
@@ -151,5 +167,10 @@ void loop() {
 
   temperatureData.addData(DataPoint(current_time, temp.temperature));
 
-  // flightStatus.update(&SD_serial);
+  launchPredictor.update(DataPoint(current_time, accel.acceleration.x), DataPoint(current_time, accel.acceleration.y), DataPoint(current_time, accel.acceleration.z));
+  if (launchPredictor.isLaunched()) {
+    toggle_delay = 50;
+  }
+
+  medianAccelSquared.addData(DataPoint(current_time, launchPredictor.getMedianAccelerationSquared()));
 }
