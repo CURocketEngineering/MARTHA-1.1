@@ -1,11 +1,13 @@
+
 #include <Arduino.h>
 #include <Adafruit_MPL3115A2.h>
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_LIS3MDL.h>
-
-#include "SensorDataHandler.h"
-#include "flightstatus.h"
 #include <SD.h>
+
+#include "data_handling/SensorDataHandler.h"
+#include "data_handling/DataSaverSDSerial.h"
+#include "data_handling/DataNames.h"
 
 #define DEBUG Serial
 
@@ -13,30 +15,21 @@ Adafruit_MPL3115A2 baro;
 Adafruit_LSM6DSOX sox;
 Adafruit_LIS3MDL mag;
 
-// ----------------
-// Initalization of data handlers
-// ----------------
-// First parameter is the interval between each data point in milliseconds
-// Second parameter is the size of the temporal array in milliseconds (i.e. hold old data is the oldest data point)
-// Third parameter is the name of the data
-
-SensorData xAccelData(50, 1000, "xac");
-SensorData yAccelData(50, 1000, "yac");
-SensorData zAccelData(50, 1000, "zac");
-
-SensorData xGyroData(500, 1000, "xgy");
-SensorData yGyroData(500, 1000, "ygy");
-SensorData zGyroData(500, 1000, "zgy");
-
-// Storing these at a slower rate b/c less important
-SensorData temperatureData(500, 1000, "tmp"); 
-
-FlightStatus flightStatus(&xAccelData, &yAccelData, &zAccelData);
-
-// SensorData *dataHandlers[] = {&altitudeData, &xAccelData, &yAccelData, &zAccelData, &xGyroData, &yGyroData, &zGyroData, &temperatureData, &pressureData, &xMagData, &yMagData, &zMagData};
 
 // For the serial SD card logger
 HardwareSerial SD_serial(PB7, PB6); // RX, TX
+DataSaverSDSerial dataSaverSDSerial(SD_serial);
+
+SensorDataHandler xAccelData(ACCELEROMETER_X, &dataSaverSDSerial);
+SensorDataHandler yAccelData(ACCELEROMETER_Y, &dataSaverSDSerial);
+SensorDataHandler zAccelData(ACCELEROMETER_Z, &dataSaverSDSerial);
+
+SensorDataHandler xGyroData(GYROSCOPE_X, &dataSaverSDSerial);
+SensorDataHandler yGyroData(GYROSCOPE_Y, &dataSaverSDSerial);
+SensorDataHandler zGyroData(GYROSCOPE_Z, &dataSaverSDSerial);
+
+// Storing these at a slower rate b/c less important
+SensorDataHandler temperatureData(TEMPERATURE, &dataSaverSDSerial);
 
 int last_led_toggle = 0;
 
@@ -49,8 +42,6 @@ void setup(void) {
   // while (!Serial)
   //   delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
-  
-  flightStatus.setupSDHs();
 
   SD_serial.begin(115200);
   while (!SD_serial)
@@ -130,14 +121,15 @@ void setup(void) {
   //   Serial.println("Failed to set Mag data rate");
   // }
   // test_DataHandler();
+  temperatureData.restrictSaveSpeed(1000); // Save temperature data every second
   Serial.println("Setup Complete!!!");
 }
 
 void loop() {
   int toggle_delay = 500;
-  if (flightStatus.getStage() > ARMED) {
-    toggle_delay = 50;
-  }
+  // if (flightStatus.getStage() > ARMED) {
+  //   toggle_delay = 50;
+  // }
   uint32_t current_time = millis();
   if (current_time - last_led_toggle > toggle_delay) {
     last_led_toggle = millis();
@@ -149,15 +141,15 @@ void loop() {
   sensors_event_t temp;
   sox.getEvent(&accel, &gyro, &temp);
 
-  xAccelData.addData(DataPoint(current_time, accel.acceleration.x), &SD_serial);
-  yAccelData.addData(DataPoint(current_time, accel.acceleration.y), &SD_serial);
-  zAccelData.addData(DataPoint(current_time, accel.acceleration.z), &SD_serial);
+  xAccelData.addData(DataPoint(current_time, accel.acceleration.x));
+  yAccelData.addData(DataPoint(current_time, accel.acceleration.y));
+  zAccelData.addData(DataPoint(current_time, accel.acceleration.z));
 
-  xGyroData.addData(DataPoint(current_time, gyro.gyro.x), &SD_serial);
-  yGyroData.addData(DataPoint(current_time, gyro.gyro.y), &SD_serial);
-  zGyroData.addData(DataPoint(current_time, gyro.gyro.z), &SD_serial);
+  xGyroData.addData(DataPoint(current_time, gyro.gyro.x));
+  yGyroData.addData(DataPoint(current_time, gyro.gyro.y));
+  zGyroData.addData(DataPoint(current_time, gyro.gyro.z));
 
-  temperatureData.addData(DataPoint(current_time, temp.temperature), &SD_serial);
+  temperatureData.addData(DataPoint(current_time, temp.temperature));
 
-  flightStatus.update(&SD_serial);
+  // flightStatus.update(&SD_serial);
 }
